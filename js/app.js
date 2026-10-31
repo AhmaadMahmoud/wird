@@ -501,6 +501,7 @@
       return `<li>${cardHTML(d, n, i === firstOpen)}</li>`;
     }).join('');
 
+    fitQuran(list);
     updateAdhkarHeader();
   }
 
@@ -511,11 +512,48 @@
     for (const p of q.passages) {
       if (p.showName) html += `<span class="surah-name">سورة ${p.surah.name}</span>`;
       if (p.basmala) html += `<span class="basmala">${window.QURAN.basmala}</span>`;
-      html += '<span class="ayat">' + p.surah.ayat
-        .map(([n, t]) => `${t}<span class="ayah-num" aria-label="الآية ${nf.format(n)}">\uFD3F${nf.format(n)}\uFD3E</span>`)
-        .join(' ') + '</span>';
+      const num = (n) => `<span class="ayah-num" aria-label="الآية ${nf.format(n)}">\uFD3F${nf.format(n)}\uFD3E</span>`;
+      if (p.surah.ayat.length > 1) {
+        // السور القصيرة: كل آية في سطر مستقل كما في المصحف
+        html += '<span class="ayat lines">' + p.surah.ayat
+          .map(([n, t]) => `<span class="ayah-line">${t}${num(n)}</span>`)
+          .join(' ') + '</span>';
+      } else {
+        html += '<span class="ayat">' + p.surah.ayat.map(([n, t]) => t + num(n)).join(' ') + '</span>';
+      }
     }
     return html + '</div>';
+  }
+
+  // تصغير خط السورة بالقدر اللازم فقط حتى تتسع كل آية لسطر واحد
+  const QURAN_MIN_SIZE = 17;
+  function fitQuran(root) {
+    // القياس يجب أن يتم بخط المصحف نفسه، فننتظر تحميله إن لم يكن جاهزًا
+    if (document.fonts && !document.fonts.check('23px "Amiri Quran"', 'بِسۡمِ')) {
+      document.fonts.load('23px "Amiri Quran"', 'بِسۡمِ').then(() => fitQuran(root)).catch(() => {});
+    }
+    (root || document).querySelectorAll('.ayat.lines').forEach((box) => {
+      box.style.fontSize = '';
+      box.classList.remove('wrap');
+      if (!box.clientWidth) return;
+      const lines = Array.from(box.querySelectorAll('.ayah-line'));
+      const overflows = () => lines.some((l) => l.scrollWidth > box.clientWidth + 1);
+      let size = parseFloat(getComputedStyle(box).fontSize);
+      while (overflows() && size > QURAN_MIN_SIZE) {
+        size -= 0.5;
+        box.style.fontSize = size + 'px';
+      }
+      if (overflows()) box.classList.add('wrap');
+    });
+  }
+
+  let fitTimer;
+  window.addEventListener('resize', () => {
+    clearTimeout(fitTimer);
+    fitTimer = setTimeout(() => fitQuran($('dhikr-list')), 120);
+  });
+  if (document.fonts) {
+    document.fonts.addEventListener('loadingdone', () => fitQuran($('dhikr-list')));
   }
 
   const C = 2 * Math.PI * 22;
@@ -576,6 +614,7 @@
     // تحديث البطاقة الحالية فقط
     const li = card.parentElement;
     li.innerHTML = cardHTML(d, n + 1, !finished);
+    fitQuran(li);
     if (!finished) {
       const c = li.querySelector('.counter');
       c.classList.add('pulse');
@@ -584,6 +623,7 @@
       if (nextIdx !== -1) {
         const nextLi = $('dhikr-list').children[nextIdx];
         nextLi.innerHTML = cardHTML(set.items[nextIdx], counts[set.items[nextIdx].id] || 0, true);
+        fitQuran(nextLi);
         setTimeout(() => nextLi.scrollIntoView({ behavior: 'smooth', block: 'center' }), 180);
       }
     }

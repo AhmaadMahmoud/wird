@@ -459,6 +459,12 @@ button { cursor: pointer; }
   text-align: center;
   color: var(--ink-2);
 }
+.quran .ayat { display: block; }
+.quran .ayat.lines { text-align: center; }
+.quran .ayah-line { display: block; white-space: nowrap; }
+.quran .ayat.lines.wrap .ayah-line { white-space: normal; }
+.dhikr.is-done .quran .ayah-line { white-space: normal; display: inline; }
+.dhikr.is-done .quran .ayat.lines { text-align: right; }
 .quran .ayah-num {
   color: var(--gold);
   white-space: nowrap;
