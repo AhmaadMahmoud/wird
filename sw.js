@@ -1,6 +1,13 @@
 /* عامل الخدمة: يحفظ ملفات التطبيق ليعمل دون اتصال بالإنترنت.
-   عند تعديل أي ملف، غيّر رقم الإصدار ليحصل المستخدمون على النسخة الجديدة. */
-const VERSION = 'wird-v2';
+ *
+ * الاستراتيجية:
+ * - صفحات التطبيق وملفات الكود (HTML/CSS/JS): من الشبكة أولًا مع التحقق من الخادم،
+ *   ثم من الذاكرة عند انقطاع الاتصال. هكذا تصل التعديلات فور نشرها.
+ * - الخطوط والأيقونات: من الذاكرة أولًا لأنها لا تتغير.
+ *
+ * عند إضافة ملف جديد إلى التطبيق، أضفه إلى SHELL وغيّر رقم الإصدار.
+ */
+const VERSION = 'wird-v3';
 
 const SHELL = [
   './',
@@ -24,8 +31,15 @@ const SHELL = [
   './fonts/readex-pro-arabic-600-normal.woff2',
 ];
 
+const NETWORK_TIMEOUT = 3500;
+
 self.addEventListener('install', (event) => {
-  event.waitUntil(caches.open(VERSION).then((c) => c.addAll(SHELL)).then(() => self.skipWaiting()));
+  // cache: 'reload' يتجاوز ذاكرة المتصفح المؤقتة فنحفظ أحدث نسخة من الخادم فعلًا
+  event.waitUntil(
+    caches.open(VERSION)
+      .then((c) => c.addAll(SHELL.map((u) => new Request(u, { cache: 'reload' }))))
+      .then(() => self.skipWaiting())
+  );
 });
 
 self.addEventListener('activate', (event) => {
@@ -36,24 +50,40 @@ self.addEventListener('activate', (event) => {
   );
 });
 
+function isStatic(url) {
+  return /\.(woff2?|png|jpg|jpeg|svg|ico)$/i.test(url.pathname);
+}
+
+async function networkFirst(req) {
+  const cache = await caches.open(VERSION);
+  try {
+    const res = await Promise.race([
+      fetch(req, { cache: 'no-cache' }),
+      new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), NETWORK_TIMEOUT)),
+    ]);
+    if (res && res.ok) cache.put(req, res.clone());
+    return res;
+  } catch (e) {
+    const cached = await cache.match(req, { ignoreSearch: true });
+    if (cached) return cached;
+    if (req.mode === 'navigate') return cache.match('./index.html');
+    throw e;
+  }
+}
+
+async function cacheFirst(req) {
+  const cache = await caches.open(VERSION);
+  const cached = await cache.match(req, { ignoreSearch: true });
+  if (cached) return cached;
+  const res = await fetch(req);
+  if (res.ok) cache.put(req, res.clone());
+  return res;
+}
+
 self.addEventListener('fetch', (event) => {
   const req = event.request;
   if (req.method !== 'GET') return;
   const url = new URL(req.url);
-
   if (url.origin !== self.location.origin) return;
-
-  // ملفات التطبيق: من الذاكرة أولًا، ثم الشبكة
-  event.respondWith(
-    caches.match(req, { ignoreSearch: true }).then((cached) => {
-      if (cached) return cached;
-      return fetch(req).then((res) => {
-        if (res.ok) {
-          const copy = res.clone();
-          caches.open(VERSION).then((c) => c.put(req, copy));
-        }
-        return res;
-      }).catch(() => (req.mode === 'navigate' ? caches.match('./index.html') : undefined));
-    })
-  );
+  event.respondWith(isStatic(url) ? cacheFirst(req) : networkFirst(req));
 });
