@@ -430,6 +430,44 @@ button { cursor: pointer; }
   white-space: pre-line;
 }
 
+.dhikr-text.quran {
+  font-family: 'Amiri Quran', var(--font-text);
+  font-size: 23px;
+  line-height: 2.4;
+  white-space: normal;
+}
+.quran .preface {
+  display: block;
+  font-family: var(--font-text);
+  font-size: 17px;
+  line-height: 1.8;
+  color: var(--ink-2);
+  margin-bottom: 4px;
+}
+.quran .surah-name {
+  display: block;
+  font-family: var(--font-ui);
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.6;
+  color: var(--gold);
+  margin-top: 14px;
+}
+.quran .surah-name:first-child { margin-top: 0; }
+.quran .basmala {
+  display: block;
+  text-align: center;
+  color: var(--ink-2);
+}
+.quran .ayah-num {
+  color: var(--gold);
+  white-space: nowrap;
+  margin-inline: 2px;
+}
+.dhikr.is-done .quran .preface,
+.dhikr.is-done .quran .basmala,
+.dhikr.is-done .quran .surah-name { display: none; }
+
 .dhikr-foot {
   display: flex;
   align-items: center;

@@ -1,6 +1,6 @@
 /* عامل الخدمة: يحفظ ملفات التطبيق ليعمل دون اتصال بالإنترنت.
    عند تعديل أي ملف، غيّر رقم الإصدار ليحصل المستخدمون على النسخة الجديدة. */
-const VERSION = 'wird-v1';
+const VERSION = 'wird-v2';
 
 const SHELL = [
   './',
@@ -9,6 +9,7 @@ const SHELL = [
   './css/fonts.css',
   './js/app.js',
   './js/adhkar.js',
+  './js/quran.js',
   './js/adhan.min.js',
   './manifest.webmanifest',
   './icons/icon-192.png',
@@ -16,6 +17,7 @@ const SHELL = [
   './icons/apple-touch-icon.png',
   './fonts/amiri-arabic-400-normal.woff2',
   './fonts/amiri-arabic-700-normal.woff2',
+  './fonts/amiri-quran-arabic-400-normal.woff2',
   './fonts/readex-pro-arabic-300-normal.woff2',
   './fonts/readex-pro-arabic-400-normal.woff2',
   './fonts/readex-pro-arabic-500-normal.woff2',

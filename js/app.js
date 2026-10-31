@@ -504,6 +504,20 @@
     updateAdhkarHeader();
   }
 
+  // عرض الآيات بخط المصحف، مع رقم الآية في آخرها
+  function quranHTML(q) {
+    let html = '<div class="dhikr-text quran">';
+    if (q.preface) html += `<span class="preface">${q.preface}</span>`;
+    for (const p of q.passages) {
+      if (p.showName) html += `<span class="surah-name">سورة ${p.surah.name}</span>`;
+      if (p.basmala) html += `<span class="basmala">${window.QURAN.basmala}</span>`;
+      html += '<span class="ayat">' + p.surah.ayat
+        .map(([n, t]) => `${t}<span class="ayah-num" aria-label="الآية ${nf.format(n)}">\uFD3F${nf.format(n)}\uFD3E</span>`)
+        .join(' ') + '</span>';
+    }
+    return html + '</div>';
+  }
+
   const C = 2 * Math.PI * 22;
   function cardHTML(d, n, current) {
     const done = n >= d.count;
@@ -513,7 +527,7 @@
     return `<button type="button" class="dhikr ${done ? 'is-done' : ''} ${current ? 'is-current' : ''}" data-id="${d.id}"
               aria-label="${done ? 'مكتمل' : 'متبقٍ ' + left}">
         ${d.note ? `<span class="dhikr-note">${d.note}</span>` : ''}
-        <p class="dhikr-text">${d.text}</p>
+        ${d.quran ? quranHTML(d.quran) : `<p class="dhikr-text">${d.text}</p>`}
         <span class="dhikr-foot">
           <span class="dhikr-times">${times}</span>
           <span class="counter">

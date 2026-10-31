@@ -3,22 +3,27 @@
  * كل ذكر: { id, text, count, note? , only?: 'morning' | 'evening', evening?: نص المساء إن اختلف }
  */
 (function () {
-  const AYAT_AL_KURSI =
-    'أعوذ بالله من الشيطان الرجيم. الله لا إله إلا هو الحي القيوم، لا تأخذه سنة ولا نوم، له ما في السماوات وما في الأرض، من ذا الذي يشفع عنده إلا بإذنه، يعلم ما بين أيديهم وما خلفهم، ولا يحيطون بشيء من علمه إلا بما شاء، وسع كرسيه السماوات والأرض، ولا يئوده حفظهما، وهو العلي العظيم.';
-
-  const IKHLAS =
-    'بسم الله الرحمن الرحيم. قل هو الله أحد، الله الصمد، لم يلد ولم يولد، ولم يكن له كفوا أحد.';
-  const FALAQ =
-    'بسم الله الرحمن الرحيم. قل أعوذ برب الفلق، من شر ما خلق، ومن شر غاسق إذا وقب، ومن شر النفاثات في العقد، ومن شر حاسد إذا حسد.';
-  const NAS =
-    'بسم الله الرحمن الرحيم. قل أعوذ برب الناس، ملك الناس، إله الناس، من شر الوسواس الخناس، الذي يوسوس في صدور الناس، من الجنة والناس.';
+  // الآيات تُؤخذ من js/quran.js (نص المصحف العثماني بتشكيله الكامل)
+  const Q = window.QURAN;
+  const ISTIADHA = 'أَعُوذُ بِاللَّهِ مِنَ الشَّيْطَانِ الرَّجِيمِ';
+  const KURSI = { preface: ISTIADHA, passages: [{ surah: Q.kursi, basmala: false }] };
+  const IKHLAS = { passages: [{ surah: Q.ikhlas, basmala: true }] };
+  const FALAQ = { passages: [{ surah: Q.falaq, basmala: true }] };
+  const NAS = { passages: [{ surah: Q.nas, basmala: true }] };
+  const MUAWWIDHAT = {
+    passages: [
+      { surah: Q.ikhlas, basmala: true, showName: true },
+      { surah: Q.falaq, basmala: true, showName: true },
+      { surah: Q.nas, basmala: true, showName: true },
+    ],
+  };
 
   // أذكار الصباح والمساء (المشترك بينهما مع اختلاف الصيغة حيث يلزم)
   const morningEvening = [
-    { id: 'kursi', text: AYAT_AL_KURSI, count: 1, note: 'آية الكرسي' },
-    { id: 'ikhlas', text: IKHLAS, count: 3, note: 'سورة الإخلاص' },
-    { id: 'falaq', text: FALAQ, count: 3, note: 'سورة الفلق' },
-    { id: 'nas', text: NAS, count: 3, note: 'سورة الناس' },
+    { id: 'kursi', quran: KURSI, count: 1, note: 'آية الكرسي' },
+    { id: 'ikhlas', quran: IKHLAS, count: 3, note: 'سورة الإخلاص' },
+    { id: 'falaq', quran: FALAQ, count: 3, note: 'سورة الفلق' },
+    { id: 'nas', quran: NAS, count: 3, note: 'سورة الناس' },
     {
       id: 'asbahna',
       text: 'أصبحنا وأصبح الملك لله، والحمد لله، لا إله إلا الله وحده لا شريك له، له الملك وله الحمد وهو على كل شيء قدير، رب أسألك خير ما في هذا اليوم وخير ما بعده، وأعوذ بك من شر ما في هذا اليوم وشر ما بعده، رب أعوذ بك من الكسل وسوء الكبر، رب أعوذ بك من عذاب في النار وعذاب في القبر.',
@@ -126,10 +131,10 @@
       count: 1,
       note: 'تمام المئة',
     },
-    { id: 'ap-kursi', text: AYAT_AL_KURSI, count: 1, note: 'آية الكرسي' },
+    { id: 'ap-kursi', quran: KURSI, count: 1, note: 'آية الكرسي' },
     {
       id: 'ap-muawwidhat',
-      text: IKHLAS + '\n' + FALAQ + '\n' + NAS,
+      quran: MUAWWIDHAT,
       count: 1,
       note: 'المعوذات — تُقرأ ثلاثًا بعد صلاتي الفجر والمغرب',
     },
@@ -153,6 +158,7 @@
       .map((d) => ({
         id: d.id,
         text: kind === 'evening' && d.evening ? d.evening : d.text,
+        quran: d.quran,
         count: d.count,
         note: d.note,
       }));

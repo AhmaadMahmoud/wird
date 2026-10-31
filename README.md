@@ -51,6 +51,7 @@ css/fonts.css         تعريف الخطوط
 fonts/                ملفات الخطوط
 js/app.js             منطق التطبيق
 js/adhkar.js          نصوص الأذكار
+js/quran.js           نصوص الآيات القرآنية بالرسم العثماني
 js/adhan.min.js       مكتبة حساب المواقيت
 manifest.webmanifest  بيانات تثبيت التطبيق
 sw.js                 عامل الخدمة للعمل دون اتصال
@@ -60,7 +61,8 @@ icons/                الأيقونات
 ## المصادر
 
 - حساب المواقيت: مكتبة [adhan-js](https://github.com/batoulapps/adhan-js) (رخصة MIT، الملف `js/adhan.LICENSE`).
+- نصوص الآيات: النص العثماني برواية حفص من «موسوعة القرآن الكريم» (quranenc.com)، مولّدة آليًا في `js/quran.js` دون تعديل يدوي، وتُعرض بخط Amiri Quran.
 - نصوص الأذكار: كتاب «حصن المسلم».
-- الخطوط: Amiri وReadex Pro، مضمّنة في المجلد `fonts` (رخصة SIL OFL).
+- الخطوط: Amiri وAmiri Quran وReadex Pro، مضمّنة في المجلد `fonts` (رخصة SIL OFL).
 
 إن وجدت خطأ في نص ذكر أو في المواقيت، افتح Issue أو أرسل Pull Request.
