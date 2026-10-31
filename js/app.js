@@ -866,16 +866,6 @@
     renderTasbih();
   });
 
-  $('tasbih-undo').addEventListener('click', () => {
-    const c = cur();
-    if (c.count > 0) {
-      c.count -= 1;
-      tasbih.total = Math.max(0, tasbih.total - 1);
-    }
-    saveTasbih();
-    renderTasbih();
-  });
-
   $('tasbih-reset').addEventListener('click', () => {
     const c = cur();
     if (!c.count) return;
