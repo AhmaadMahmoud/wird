@@ -122,68 +122,40 @@
       </section>
     </section>
 
-    <!-- ======================= الإعدادات ======================= -->
-    <section class="view" id="view-settings" aria-labelledby="tab-settings">
+    <!-- ======================= السبحة ======================= -->
+    <section class="view" id="view-tasbih" aria-labelledby="tab-tasbih">
       <header class="page-head">
-        <h2 class="page-title">الإعدادات</h2>
+        <h2 class="page-title">السبحة</h2>
+        <div class="phrase-chips" id="phrase-chips" role="radiogroup" aria-label="الذكر"></div>
       </header>
 
-      <div class="group">
-        <h3>الموقع</h3>
-        <button class="row row-btn" id="use-location" type="button">
-          <span>
-            <strong>استخدام موقعي الحالي</strong>
-            <small id="location-status">لحساب المواقيت بدقة لمكانك.</small>
-          </span>
-          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3.2"/><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3"/><circle cx="12" cy="12" r="7"/></svg>
+      <div class="tap-zone" id="tap-zone" aria-hidden="true">
+        <div class="beads-wrap">
+          <svg id="tasbih-beads" viewBox="0 0 300 300"></svg>
+          <div class="tasbih-center">
+            <span class="tasbih-count" id="tasbih-count">٠</span>
+            <span class="tasbih-of" id="tasbih-of"></span>
+          </div>
+        </div>
+        <p class="tasbih-phrase" id="tasbih-phrase"></p>
+        <p class="tasbih-meta" id="tasbih-meta"></p>
+        <p class="tasbih-hint" id="tasbih-hint">اضغط في أي مكان من الشاشة للتسبيح</p>
+      </div>
+
+      <div class="tasbih-controls">
+        <div class="segmented targets" id="target-tabs" role="tablist" aria-label="عدد الدورة">
+          <button type="button" role="tab" data-target="33">٣٣</button>
+          <button type="button" role="tab" data-target="100">١٠٠</button>
+          <button type="button" role="tab" data-target="0">بلا حد</button>
+        </div>
+        <button class="icon-btn" id="tasbih-undo" type="button" aria-label="تراجع عن آخر تسبيحة">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 7h-5a5 5 0 0 0 0 10h6"/><path d="M17 4l3 3-3 3"/></svg>
         </button>
-        <label class="row">
-          <span><strong>أو اختر مدينة</strong></span>
-          <select id="city-select"></select>
-        </label>
-      </div>
-
-      <div class="group">
-        <h3>طريقة الحساب</h3>
-        <label class="row">
-          <span><strong>الهيئة</strong></span>
-          <select id="method-select">
-            <option value="UmmAlQura">أم القرى</option>
-            <option value="Egyptian">الهيئة المصرية</option>
-            <option value="MuslimWorldLeague">رابطة العالم الإسلامي</option>
-            <option value="Dubai">دبي</option>
-            <option value="Kuwait">الكويت</option>
-            <option value="Qatar">قطر</option>
-            <option value="Karachi">جامعة كراتشي</option>
-            <option value="Turkey">الشؤون الدينية التركية</option>
-            <option value="NorthAmerica">أمريكا الشمالية</option>
-          </select>
-        </label>
-        <label class="row">
-          <span><strong>وقت العصر</strong></span>
-          <select id="madhab-select">
-            <option value="Shafi">الجمهور</option>
-            <option value="Hanafi">الحنفي</option>
-          </select>
-        </label>
-        <label class="row">
-          <span><strong>صيغة الوقت</strong></span>
-          <select id="hour-select">
-            <option value="12">١٢ ساعة</option>
-            <option value="24">٢٤ ساعة</option>
-          </select>
-        </label>
-      </div>
-
-      <div class="group">
-        <h3>البيانات</h3>
-        <p class="group-note">تُحفظ بياناتك على هذا الجهاز فقط، ولا تُرسل إلى أي خادم.</p>
-        <button class="row row-btn danger" id="clear-data" type="button">
-          <span><strong>مسح سجل الالتزام</strong></span>
+        <button class="icon-btn" id="tasbih-reset" type="button" aria-label="تصفير العداد">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12a8 8 0 1 0 2.3-5.6"/><path d="M4 4v4h4"/></svg>
         </button>
       </div>
-
-      <p class="about">وِرد، تطبيق مفتوح المصدر</p>
+      <p class="sr-only" id="tasbih-live" aria-live="polite"></p>
     </section>
 
     <!-- ======================= الشريط السفلي ======================= -->
@@ -193,18 +165,41 @@
         <span>الصلاة</span>
       </button>
       <button role="tab" id="tab-adhkar" data-view="adhkar" aria-selected="false" type="button">
-        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="5" r="2"/><circle cx="6.2" cy="8.4" r="2"/><circle cx="17.8" cy="8.4" r="2"/><circle cx="6.2" cy="15" r="2"/><circle cx="17.8" cy="15" r="2"/><path d="M12 17.5v4M10.5 21.5h3"/></svg>
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 6.5C10 5 7 4.5 3.5 5v13c3.5-.5 6.5 0 8.5 1.5 2-1.5 5-2 8.5-1.5V5C17 4.5 14 5 12 6.5Z"/><path d="M12 6.5v13"/></svg>
         <span>الأذكار</span>
       </button>
       <button role="tab" id="tab-progress" data-view="progress" aria-selected="false" type="button">
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3a9 9 0 1 0 9 9"/><path d="M12 7v5l3 2"/><path d="M16 3.6A9 9 0 0 1 20.4 8"/></svg>
         <span>التزامي</span>
       </button>
-      <button role="tab" id="tab-settings" data-view="settings" aria-selected="false" type="button">
-        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h10M18 7h2M4 17h2M10 17h10"/><circle cx="16" cy="7" r="2"/><circle cx="8" cy="17" r="2"/></svg>
-        <span>الإعدادات</span>
+      <button role="tab" id="tab-tasbih" data-view="tasbih" aria-selected="false" type="button">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="5" r="2"/><circle cx="6.2" cy="8.4" r="2"/><circle cx="17.8" cy="8.4" r="2"/><circle cx="6.2" cy="15" r="2"/><circle cx="17.8" cy="15" r="2"/><path d="M12 17.5v4M10.5 21.5h3"/></svg>
+        <span>السبحة</span>
       </button>
     </nav>
+
+    <!-- ======================= نافذة الموقع ======================= -->
+    <div class="sheet-backdrop" id="loc-sheet" hidden>
+      <div class="sheet-panel" role="dialog" aria-modal="true" aria-labelledby="loc-title">
+        <span class="sheet-grip" aria-hidden="true"></span>
+        <h3 class="sheet-title" id="loc-title">الموقع</h3>
+        <p class="sheet-note">تُحسب مواقيت الصلاة وطريقتها تلقائيًا حسب المدينة.</p>
+        <div class="group">
+          <button class="row row-btn" id="use-location" type="button">
+            <span>
+              <strong>استخدام موقعي الحالي</strong>
+              <small id="location-status">لحساب المواقيت بدقة لمكانك.</small>
+            </span>
+            <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3.2"/><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3"/><circle cx="12" cy="12" r="7"/></svg>
+          </button>
+          <label class="row">
+            <span><strong>أو اختر مدينة</strong></span>
+            <select id="city-select"></select>
+          </label>
+        </div>
+        <button class="btn btn-night sheet-done" id="loc-close" type="button">تم</button>
+      </div>
+    </div>
 
     <div class="toast" id="toast" role="status" aria-live="polite"></div>
   </div>

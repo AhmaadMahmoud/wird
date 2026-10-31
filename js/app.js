@@ -652,17 +652,15 @@
     window.scrollTo({ top: 0, behavior: 'smooth' });
   });
 
-  // ---------------------------------------------------------------- الإعدادات
-  function renderSettings() {
+  // ---------------------------------------------------------------- الموقع
+  // الإعدادات الافتراضية: طريقة الحساب حسب المدينة، والعصر على الجمهور، وصيغة ١٢ ساعة
+  function renderLocation() {
     const sel = $('city-select');
     if (!sel.options.length) {
       sel.innerHTML = '<option value="" disabled>اختر مدينة</option>' +
         CITIES.map((c) => `<option value="${c.id}">${c.name}</option>`).join('');
     }
     sel.value = settings.source === 'city' ? settings.cityId : '';
-    $('method-select').value = settings.method;
-    $('madhab-select').value = settings.madhab;
-    $('hour-select').value = settings.hour12 ? '12' : '24';
     $('location-status').textContent = settings.source === 'gps'
       ? 'تُحسب المواقيت حسب موقعك الحالي.'
       : 'لحساب المواقيت بدقة لمكانك.';
@@ -673,20 +671,36 @@
     timesCache.clear();
     lastListSig = '';
     tick(true);
-    renderSettings();
+    renderLocation();
   }
+
+  function openLocation() {
+    renderLocation();
+    $('loc-sheet').hidden = false;
+    requestAnimationFrame(() => $('loc-sheet').classList.add('open'));
+    $('loc-close').focus();
+  }
+
+  function closeLocation() {
+    const s = $('loc-sheet');
+    s.classList.remove('open');
+    setTimeout(() => { s.hidden = true; }, 220);
+    $('place-chip').focus();
+  }
+
+  $('place-chip').addEventListener('click', openLocation);
+  $('loc-close').addEventListener('click', closeLocation);
+  $('loc-sheet').addEventListener('click', (e) => { if (e.target === e.currentTarget) closeLocation(); });
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !$('loc-sheet').hidden) closeLocation(); });
 
   $('city-select').addEventListener('change', (e) => {
     const c = CITIES.find((x) => x.id === e.target.value);
     if (!c) return;
     Object.assign(settings, { source: 'city', cityId: c.id, label: c.name, lat: c.lat, lng: c.lng, tz: c.tz, method: c.method });
     settingsChanged();
+    closeLocation();
     toast('تم اختيار ' + c.name);
   });
-
-  $('method-select').addEventListener('change', (e) => { settings.method = e.target.value; settingsChanged(); });
-  $('madhab-select').addEventListener('change', (e) => { settings.madhab = e.target.value; settingsChanged(); });
-  $('hour-select').addEventListener('change', (e) => { settings.hour12 = e.target.value === '12'; settingsChanged(); });
 
   $('use-location').addEventListener('click', () => {
     if (!navigator.geolocation) { toast('المتصفح لا يدعم تحديد الموقع'); return; }
@@ -704,26 +718,197 @@
           method: near ? near.method : settings.method,
         });
         settingsChanged();
+        closeLocation();
         toast('تم تحديد موقعك');
       },
       () => {
-        renderSettings();
+        renderLocation();
         toast('تعذّر تحديد الموقع، اختر مدينتك من القائمة');
       },
       { enableHighAccuracy: false, timeout: 12000, maximumAge: 3600000 }
     );
   });
 
-  $('clear-data').addEventListener('click', () => {
-    if (!confirm('هل تريد مسح سجل الالتزام بالكامل؟ لا يمكن التراجع عن ذلك.')) return;
-    log = {};
-    saveLog();
-    renderProgress();
-    tick(true);
-    toast('تم مسح السجل');
+  // ---------------------------------------------------------------- السبحة
+  const PHRASES = [
+    { id: 'subhan', label: 'سبحان الله', text: 'سُبْحَانَ اللَّهِ' },
+    { id: 'hamd', label: 'الحمد لله', text: 'الْحَمْدُ لِلَّهِ' },
+    { id: 'akbar', label: 'الله أكبر', text: 'اللَّهُ أَكْبَرُ' },
+    { id: 'tahleel', label: 'لا إله إلا الله', text: 'لَا إِلَهَ إِلَّا اللَّهُ' },
+    { id: 'istighfar', label: 'أستغفر الله', text: 'أَسْتَغْفِرُ اللَّهَ' },
+    { id: 'bihamdih', label: 'سبحان الله وبحمده', text: 'سُبْحَانَ اللَّهِ وَبِحَمْدِهِ' },
+    { id: 'hawqala', label: 'لا حول ولا قوة إلا بالله', text: 'لَا حَوْلَ وَلَا قُوَّةَ إِلَّا بِاللَّهِ' },
+    { id: 'salah', label: 'الصلاة على النبي', text: 'اللَّهُمَّ صَلِّ وَسَلِّمْ عَلَى نَبِيِّنَا مُحَمَّدٍ' },
+  ];
+  const BEADS = 33;
+
+  let tasbih = store.get('tasbih', null);
+  function ensureTasbih() {
+    const today = dayKey(new Date());
+    if (!tasbih || tasbih.date !== today) {
+      tasbih = {
+        date: today,
+        phrase: (tasbih && tasbih.phrase) || 'subhan',
+        target: tasbih && tasbih.target !== undefined ? tasbih.target : 33,
+        counts: {},
+        total: 0,
+        last: [],
+      };
+      store.set('tasbih', tasbih);
+    }
+    return tasbih;
+  }
+  function cur() {
+    const t = ensureTasbih();
+    if (!t.counts[t.phrase]) t.counts[t.phrase] = { count: 0, rounds: 0 };
+    return t.counts[t.phrase];
+  }
+  function saveTasbih() { store.set('tasbih', tasbih); }
+
+  function litFor(count, target) {
+    if (count <= 0) return 0;
+    if (target === 33) return count;
+    if (target > 0) return Math.floor((count * BEADS) / target);
+    return ((count - 1) % BEADS) + 1;
+  }
+
+  function buildBeads() {
+    const svg = $('tasbih-beads');
+    if (svg.childElementCount) return;
+    const cx = 150, cy = 150, R = 128, gap = 22;
+    let html = `<circle class="t-string" cx="${cx}" cy="${cy}" r="${R}"/>`;
+    for (let i = 0; i < BEADS; i++) {
+      // الحبّة الأولى أسفل يمين الشرّابة، والعدّ عكس عقارب الساعة كما تُمرَّر السبحة
+      const ang = ((90 - gap / 2 - (i * (360 - gap)) / (BEADS - 1)) * Math.PI) / 180;
+      const x = cx + R * Math.cos(ang), y = cy + R * Math.sin(ang);
+      html += `<circle class="t-bead" data-i="${i}" cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="7.6"/>`;
+    }
+    html += `<rect class="t-imam" x="${cx - 5}" y="${cy + R - 4}" width="10" height="18" rx="5"/>`;
+    svg.innerHTML = html;
+  }
+
+  function renderTasbih(popIndex) {
+    ensureTasbih();
+    buildBeads();
+    const c = cur();
+    const t = tasbih;
+    const p = PHRASES.find((x) => x.id === t.phrase) || PHRASES[0];
+
+    const chips = $('phrase-chips');
+    if (!chips.childElementCount) {
+      chips.innerHTML = PHRASES.map((x) => `<button type="button" role="radio" data-phrase="${x.id}">${x.label}</button>`).join('');
+    }
+    chips.querySelectorAll('button').forEach((b) => b.setAttribute('aria-checked', b.dataset.phrase === t.phrase ? 'true' : 'false'));
+    document.querySelectorAll('#target-tabs button').forEach((b) => b.setAttribute('aria-selected', +b.dataset.target === t.target ? 'true' : 'false'));
+
+    $('tasbih-count').textContent = nf.format(c.count);
+    $('tasbih-of').textContent = t.target ? 'من ' + nf.format(t.target) : '';
+    $('tasbih-phrase').textContent = p.text;
+    const meta = [];
+    if (c.rounds) meta.push((c.rounds === 1 ? 'دورة واحدة' : c.rounds === 2 ? 'دورتان' : nf.format(c.rounds) + (c.rounds <= 10 ? ' دورات' : ' دورة')) + ' مكتملة');
+    meta.push('مجموع اليوم ' + nf.format(t.total));
+    $('tasbih-meta').textContent = meta.join('، ');
+    $('tasbih-hint').classList.toggle('faded', t.total > 0);
+
+    const lit = litFor(c.count, t.target);
+    document.querySelectorAll('#tasbih-beads .t-bead').forEach((b, i) => {
+      b.classList.toggle('on', i < lit);
+      b.classList.remove('pop');
+    });
+    if (popIndex !== undefined && popIndex >= 0) {
+      const b = document.querySelector(`#tasbih-beads .t-bead[data-i="${popIndex}"]`);
+      if (b) { void b.getBoundingClientRect(); b.classList.add('pop'); }
+    }
+  }
+
+  function tasbihTap() {
+    const c = cur();
+    const t = tasbih;
+    const before = litFor(c.count, t.target);
+    c.count += 1;
+    t.total += 1;
+    t.last = (t.last || []).concat(t.phrase).slice(-50);
+    let completed = false;
+    if (t.target && c.count >= t.target) {
+      completed = true;
+      c.rounds += 1;
+    }
+    saveTasbih();
+
+    const pulse = $('tasbih-count');
+    pulse.classList.remove('bump'); void pulse.offsetWidth; pulse.classList.add('bump');
+
+    if (completed) {
+      if (navigator.vibrate) navigator.vibrate([30, 70, 30]);
+      renderTasbih(BEADS - 1);
+      const wrap = document.querySelector('.beads-wrap');
+      wrap.classList.remove('complete'); void wrap.offsetWidth; wrap.classList.add('complete');
+      $('tasbih-live').textContent = 'اكتملت الدورة';
+      setTimeout(() => { c.count = 0; saveTasbih(); renderTasbih(); }, 650);
+    } else {
+      if (navigator.vibrate) navigator.vibrate(7);
+      const after = litFor(c.count, t.target);
+      renderTasbih(after > before || !t.target ? after - 1 : undefined);
+    }
+  }
+
+  // الضغط في أي مكان من الشاشة يُحتسب، عدا الأزرار وشريط التنقل
+  $('view-tasbih').addEventListener('pointerdown', (e) => {
+    if (!e.isPrimary || (e.button !== undefined && e.button > 0)) return;
+    if (e.target.closest('button, select, a, .phrase-chips, .tasbih-controls')) return;
+    e.preventDefault();
+    tasbihTap();
+  });
+  document.addEventListener('keydown', (e) => {
+    if (!$('view-tasbih').classList.contains('is-active')) return;
+    if ((e.key === ' ' || e.key === 'Enter') && !e.target.closest('button, select, input')) {
+      e.preventDefault();
+      tasbihTap();
+    }
   });
 
-  $('place-chip').addEventListener('click', () => showView('settings'));
+  $('phrase-chips').addEventListener('click', (e) => {
+    const b = e.target.closest('button[data-phrase]');
+    if (!b) return;
+    ensureTasbih().phrase = b.dataset.phrase;
+    saveTasbih();
+    renderTasbih();
+  });
+
+  $('target-tabs').addEventListener('click', (e) => {
+    const b = e.target.closest('button[data-target]');
+    if (!b) return;
+    const t = ensureTasbih();
+    t.target = +b.dataset.target;
+    const c = cur();
+    if (t.target && c.count >= t.target) c.count = c.count % t.target;
+    saveTasbih();
+    renderTasbih();
+  });
+
+  $('tasbih-undo').addEventListener('click', () => {
+    const c = cur();
+    if (c.count > 0) {
+      c.count -= 1;
+      tasbih.total = Math.max(0, tasbih.total - 1);
+    } else if (c.rounds > 0 && tasbih.target) {
+      c.rounds -= 1;
+      c.count = tasbih.target - 1;
+      tasbih.total = Math.max(0, tasbih.total - 1);
+    }
+    saveTasbih();
+    renderTasbih();
+  });
+
+  $('tasbih-reset').addEventListener('click', () => {
+    const c = cur();
+    if (!c.count && !c.rounds) return;
+    c.count = 0;
+    c.rounds = 0;
+    saveTasbih();
+    renderTasbih();
+    toast('تم تصفير العداد');
+  });
 
   $('fajr-check-btn').addEventListener('click', () => {
     const k = dayKey(new Date());
@@ -742,7 +927,7 @@
     document.querySelectorAll('.tabbar button').forEach((b) => b.setAttribute('aria-selected', b.dataset.view === name ? 'true' : 'false'));
     if (name === 'adhkar') renderAdhkar();
     if (name === 'progress') renderProgress();
-    if (name === 'settings') renderSettings();
+    if (name === 'tasbih') renderTasbih();
     if (name === 'prayer') tick(true);
     window.scrollTo({ top: 0 });
   }
