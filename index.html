@@ -1,0 +1,216 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>وِرد — مواقيت الصلاة والأذكار</title>
+  <meta name="description" content="مواقيت الصلاة، وأذكار الصباح والمساء وبعد الصلاة، ومتابعة المحافظة على صلاة الفجر." />
+  <meta name="theme-color" content="#1B2150" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="وِرد" />
+  <link rel="manifest" href="manifest.webmanifest" />
+  <link rel="icon" href="icons/icon-192.png" type="image/png" />
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png" />
+  <link rel="preload" href="fonts/amiri-arabic-700-normal.woff2" as="font" type="font/woff2" crossorigin />
+  <link rel="stylesheet" href="css/fonts.css" />
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <div class="app">
+
+    <!-- ======================= الصلاة ======================= -->
+    <section class="view is-active" id="view-prayer" aria-labelledby="tab-prayer">
+      <header class="sky" id="sky">
+        <div class="stars" aria-hidden="true"></div>
+        <div class="sky-top">
+          <button class="place-chip" id="place-chip" type="button" aria-label="تغيير الموقع">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s-6.5-5.6-6.5-11A6.5 6.5 0 0 1 18.5 10c0 5.4-6.5 11-6.5 11Z"/><circle cx="12" cy="10" r="2.3"/></svg>
+            <span id="place-name">—</span>
+          </button>
+          <div class="dates">
+            <span id="hijri-date"></span>
+            <span id="greg-date"></span>
+          </div>
+        </div>
+
+        <div class="next">
+          <p class="next-label" id="next-label">الصلاة القادمة</p>
+          <h1 class="next-name" id="next-name">—</h1>
+          <p class="next-countdown"><span id="next-prefix">بعد</span> <bdi dir="ltr" id="countdown">--:--:--</bdi></p>
+        </div>
+
+        <svg class="arc" id="arc" viewBox="0 0 320 112" aria-hidden="true">
+          <line class="horizon" x1="0" y1="98" x2="320" y2="98" />
+          <path class="arc-path" d="M 300 98 A 140 82 0 0 0 20 98" />
+          <path class="arc-done" id="arc-done" d="" />
+          <g id="arc-marks"></g>
+          <g id="arc-body"></g>
+        </svg>
+      </header>
+
+      <div class="sheet">
+        <div class="fajr-check" id="fajr-check" hidden>
+          <div class="fajr-check-text">
+            <strong id="fajr-check-title">هل صلّيت الفجر اليوم؟</strong>
+            <span id="fajr-check-sub">سجّلها لتحافظ على سلسلتك.</span>
+          </div>
+          <button class="btn btn-gold" id="fajr-check-btn" type="button">نعم، صلّيتها</button>
+        </div>
+
+        <ol class="times" id="times" aria-label="مواقيت اليوم"></ol>
+        <p class="method-note" id="method-note"></p>
+      </div>
+    </section>
+
+    <!-- ======================= الأذكار ======================= -->
+    <section class="view" id="view-adhkar" aria-labelledby="tab-adhkar">
+      <header class="page-head">
+        <h2 class="page-title">الأذكار</h2>
+        <div class="segmented" role="tablist" id="adhkar-tabs">
+          <button role="tab" type="button" data-kind="morning">الصباح</button>
+          <button role="tab" type="button" data-kind="evening">المساء</button>
+          <button role="tab" type="button" data-kind="prayer">بعد الصلاة</button>
+        </div>
+        <div class="adhkar-progress">
+          <div class="bar"><span id="adhkar-bar"></span></div>
+          <span class="adhkar-count" id="adhkar-count"></span>
+          <button class="link-btn" id="adhkar-reset" type="button">البدء من جديد</button>
+        </div>
+      </header>
+
+      <div class="done-banner" id="done-banner" hidden>
+        <span class="done-mark" aria-hidden="true">
+          <svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>
+        </span>
+        <div>
+          <strong>تقبّل الله منك</strong>
+          <span id="done-sub">أتممت الأذكار.</span>
+        </div>
+      </div>
+
+      <ul class="dhikr-list" id="dhikr-list"></ul>
+      <p class="hint">اضغط على الذكر لعدّه، وسينتقل إلى التالي عند اكتماله.</p>
+    </section>
+
+    <!-- ======================= التزامي ======================= -->
+    <section class="view" id="view-progress" aria-labelledby="tab-progress">
+      <header class="page-head">
+        <h2 class="page-title">التزامي</h2>
+      </header>
+
+      <figure class="rosary">
+        <svg viewBox="0 0 300 300" id="rosary" role="img" aria-labelledby="rosary-cap"></svg>
+        <div class="rosary-center">
+          <span class="streak-num" id="streak-num">٠</span>
+          <span class="streak-unit" id="streak-unit">يوم</span>
+        </div>
+        <figcaption id="rosary-cap">أيام متتالية حافظت فيها على صلاة الفجر. كل حبّة يوم من آخر ٣٣ يومًا.</figcaption>
+      </figure>
+
+      <div class="stats">
+        <div><span id="stat-fajr">٠</span><small>صلاة فجر هذا الشهر</small></div>
+        <div><span id="stat-best">٠</span><small>أطول سلسلة</small></div>
+        <div><span id="stat-adhkar">٠</span><small>أيام أتممت فيها الأذكار</small></div>
+      </div>
+
+      <section class="week">
+        <h3>آخر سبعة أيام</h3>
+        <div class="week-grid" id="week-grid"></div>
+        <p class="hint">اضغط على خانة الفجر في أي يوم لتعديلها إن نسيت تسجيلها.</p>
+      </section>
+    </section>
+
+    <!-- ======================= الإعدادات ======================= -->
+    <section class="view" id="view-settings" aria-labelledby="tab-settings">
+      <header class="page-head">
+        <h2 class="page-title">الإعدادات</h2>
+      </header>
+
+      <div class="group">
+        <h3>الموقع</h3>
+        <button class="row row-btn" id="use-location" type="button">
+          <span>
+            <strong>استخدام موقعي الحالي</strong>
+            <small id="location-status">لحساب المواقيت بدقة لمكانك.</small>
+          </span>
+          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3.2"/><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3"/><circle cx="12" cy="12" r="7"/></svg>
+        </button>
+        <label class="row">
+          <span><strong>أو اختر مدينة</strong></span>
+          <select id="city-select"></select>
+        </label>
+      </div>
+
+      <div class="group">
+        <h3>طريقة الحساب</h3>
+        <label class="row">
+          <span><strong>الهيئة</strong></span>
+          <select id="method-select">
+            <option value="UmmAlQura">أم القرى</option>
+            <option value="Egyptian">الهيئة المصرية</option>
+            <option value="MuslimWorldLeague">رابطة العالم الإسلامي</option>
+            <option value="Dubai">دبي</option>
+            <option value="Kuwait">الكويت</option>
+            <option value="Qatar">قطر</option>
+            <option value="Karachi">جامعة كراتشي</option>
+            <option value="Turkey">الشؤون الدينية التركية</option>
+            <option value="NorthAmerica">أمريكا الشمالية</option>
+          </select>
+        </label>
+        <label class="row">
+          <span><strong>وقت العصر</strong></span>
+          <select id="madhab-select">
+            <option value="Shafi">الجمهور</option>
+            <option value="Hanafi">الحنفي</option>
+          </select>
+        </label>
+        <label class="row">
+          <span><strong>صيغة الوقت</strong></span>
+          <select id="hour-select">
+            <option value="12">١٢ ساعة</option>
+            <option value="24">٢٤ ساعة</option>
+          </select>
+        </label>
+      </div>
+
+      <div class="group">
+        <h3>البيانات</h3>
+        <p class="group-note">تُحفظ بياناتك على هذا الجهاز فقط، ولا تُرسل إلى أي خادم.</p>
+        <button class="row row-btn danger" id="clear-data" type="button">
+          <span><strong>مسح سجل الالتزام</strong></span>
+        </button>
+      </div>
+
+      <p class="about">وِرد، تطبيق مفتوح المصدر</p>
+    </section>
+
+    <!-- ======================= الشريط السفلي ======================= -->
+    <nav class="tabbar" role="tablist" aria-label="الأقسام">
+      <button role="tab" id="tab-prayer" data-view="prayer" aria-selected="true" type="button">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5Z"/></svg>
+        <span>الصلاة</span>
+      </button>
+      <button role="tab" id="tab-adhkar" data-view="adhkar" aria-selected="false" type="button">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="5" r="2"/><circle cx="6.2" cy="8.4" r="2"/><circle cx="17.8" cy="8.4" r="2"/><circle cx="6.2" cy="15" r="2"/><circle cx="17.8" cy="15" r="2"/><path d="M12 17.5v4M10.5 21.5h3"/></svg>
+        <span>الأذكار</span>
+      </button>
+      <button role="tab" id="tab-progress" data-view="progress" aria-selected="false" type="button">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3a9 9 0 1 0 9 9"/><path d="M12 7v5l3 2"/><path d="M16 3.6A9 9 0 0 1 20.4 8"/></svg>
+        <span>التزامي</span>
+      </button>
+      <button role="tab" id="tab-settings" data-view="settings" aria-selected="false" type="button">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h10M18 7h2M4 17h2M10 17h10"/><circle cx="16" cy="7" r="2"/><circle cx="8" cy="17" r="2"/></svg>
+        <span>الإعدادات</span>
+      </button>
+    </nav>
+
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  </div>
+
+  <script src="js/adhan.min.js"></script>
+  <script src="js/adhkar.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
