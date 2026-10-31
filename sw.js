@@ -7,7 +7,7 @@
  *
  * عند إضافة ملف جديد إلى التطبيق، أضفه إلى SHELL وغيّر رقم الإصدار.
  */
-const VERSION = 'wird-v9';
+const VERSION = 'wird-v10';
 
 const SHELL = [
   './',
