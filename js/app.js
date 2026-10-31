@@ -821,17 +821,21 @@
     }
   }
 
+  let flashTimer = null;
+
   function tasbihTap() {
     const c = cur();
     const t = tasbih;
+    // أي ضغطة أثناء وميض اكتمال الدورة تُنهي الوميض فورًا وتُحتسب
+    if (flashTimer) { clearTimeout(flashTimer); flashTimer = null; }
     const before = litFor(c.count, t.target);
     c.count += 1;
     t.total += 1;
-    t.last = (t.last || []).concat(t.phrase).slice(-50);
     let completed = false;
     if (t.target && c.count >= t.target) {
       completed = true;
       c.rounds += 1;
+      c.count = 0; // التصفير فوري حتى لا تضيع أي ضغطة تالية
     }
     saveTasbih();
 
@@ -840,11 +844,14 @@
 
     if (completed) {
       if (navigator.vibrate) navigator.vibrate([30, 70, 30]);
-      renderTasbih(BEADS - 1);
+      // وميض عرض فقط: الحلقة كاملة والرقم المكتمل، ثم العودة للعدّ
+      renderTasbih();
+      document.querySelectorAll('#tasbih-beads .t-bead').forEach((b) => b.classList.add('on'));
+      $('tasbih-count').textContent = nf.format(t.target);
       const wrap = document.querySelector('.beads-wrap');
       wrap.classList.remove('complete'); void wrap.offsetWidth; wrap.classList.add('complete');
       $('tasbih-live').textContent = 'اكتملت الدورة';
-      setTimeout(() => { c.count = 0; saveTasbih(); renderTasbih(); }, 650);
+      flashTimer = setTimeout(() => { flashTimer = null; renderTasbih(); }, 650);
     } else {
       if (navigator.vibrate) navigator.vibrate(7);
       const after = litFor(c.count, t.target);
@@ -853,12 +860,19 @@
   }
 
   // الضغط في أي مكان من الشاشة يُحتسب، عدا الأزرار وشريط التنقل
+  // كل لمسة تُحتسب، حتى عند التسبيح بإصبعين بالتناوب السريع
+  const isControl = (el) => el.closest('button, select, a, .phrase-chips, .tasbih-controls');
   $('view-tasbih').addEventListener('pointerdown', (e) => {
-    if (!e.isPrimary || (e.button !== undefined && e.button > 0)) return;
-    if (e.target.closest('button, select, a, .phrase-chips, .tasbih-controls')) return;
+    if (e.pointerType === 'mouse' && e.button > 0) return;
+    if (isControl(e.target)) return;
     e.preventDefault();
     tasbihTap();
   });
+  // منع التكبير والنقرة المتأخرة على شاشة السبحة (يلزم مستمع غير سلبي لـ iOS)
+  const blockTouch = (e) => { if (!isControl(e.target)) e.preventDefault(); };
+  $('view-tasbih').addEventListener('touchstart', blockTouch, { passive: false });
+  $('view-tasbih').addEventListener('touchend', blockTouch, { passive: false });
+  $('view-tasbih').addEventListener('dblclick', (e) => e.preventDefault());
   document.addEventListener('keydown', (e) => {
     if (!$('view-tasbih').classList.contains('is-active')) return;
     if ((e.key === ' ' || e.key === 'Enter') && !e.target.closest('button, select, input')) {
@@ -946,6 +960,14 @@
     clearTimeout(toastTimer);
     toastTimer = setTimeout(() => el.classList.remove('show'), 2200);
   }
+
+  // ---------------------------------------------------------------- منع التكبير
+  ['gesturestart', 'gesturechange', 'gestureend'].forEach((t) =>
+    document.addEventListener(t, (e) => e.preventDefault(), { passive: false })
+  );
+  document.addEventListener('touchmove', (e) => {
+    if (e.touches && e.touches.length > 1) e.preventDefault();
+  }, { passive: false });
 
   // ---------------------------------------------------------------- الدورة
   function tick(force) {
