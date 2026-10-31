@@ -792,7 +792,6 @@ button { cursor: pointer; }
 }
 .tasbih-count.bump { animation: count-bump .18s ease-out; }
 @keyframes count-bump { 50% { transform: scale(1.06); } }
-.tasbih-of { margin-top: 8px; font-size: 14px; color: var(--ink-3); min-height: 1.4em; }
 
 .tasbih-phrase {
   margin: 18px 0 0;
@@ -813,11 +812,11 @@ button { cursor: pointer; }
   display: flex;
   touch-action: manipulation;
   align-items: center;
-  gap: 10px;
+  justify-content: center;
+  gap: 16px;
   padding: 10px 16px 0;
   cursor: auto;
 }
-.tasbih-controls .segmented { flex: 1; }
 .icon-btn {
   flex: none;
   width: 46px;

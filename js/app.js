@@ -749,7 +749,6 @@
       tasbih = {
         date: today,
         phrase: (tasbih && tasbih.phrase) || 'subhan',
-        target: tasbih && tasbih.target !== undefined ? tasbih.target : 33,
         counts: {},
         total: 0,
         last: [],
@@ -760,15 +759,14 @@
   }
   function cur() {
     const t = ensureTasbih();
-    if (!t.counts[t.phrase]) t.counts[t.phrase] = { count: 0, rounds: 0 };
+    if (!t.counts[t.phrase]) t.counts[t.phrase] = { count: 0 };
     return t.counts[t.phrase];
   }
   function saveTasbih() { store.set('tasbih', tasbih); }
 
-  function litFor(count, target) {
+  // العدّ مفتوح بلا حد، والحبّات تكمل دورتها كل ٣٣
+  function litFor(count) {
     if (count <= 0) return 0;
-    if (target === 33) return count;
-    if (target > 0) return Math.floor((count * BEADS) / target);
     return ((count - 1) % BEADS) + 1;
   }
 
@@ -799,18 +797,13 @@
       chips.innerHTML = PHRASES.map((x) => `<button type="button" role="radio" data-phrase="${x.id}">${x.label}</button>`).join('');
     }
     chips.querySelectorAll('button').forEach((b) => b.setAttribute('aria-checked', b.dataset.phrase === t.phrase ? 'true' : 'false'));
-    document.querySelectorAll('#target-tabs button').forEach((b) => b.setAttribute('aria-selected', +b.dataset.target === t.target ? 'true' : 'false'));
 
     $('tasbih-count').textContent = nf.format(c.count);
-    $('tasbih-of').textContent = t.target ? 'من ' + nf.format(t.target) : '';
     $('tasbih-phrase').textContent = p.text;
-    const meta = [];
-    if (c.rounds) meta.push((c.rounds === 1 ? 'دورة واحدة' : c.rounds === 2 ? 'دورتان' : nf.format(c.rounds) + (c.rounds <= 10 ? ' دورات' : ' دورة')) + ' مكتملة');
-    meta.push('مجموع اليوم ' + nf.format(t.total));
-    $('tasbih-meta').textContent = meta.join('، ');
+    $('tasbih-meta').textContent = 'مجموع اليوم ' + nf.format(t.total);
     $('tasbih-hint').classList.toggle('faded', t.total > 0);
 
-    const lit = litFor(c.count, t.target);
+    const lit = litFor(c.count);
     document.querySelectorAll('#tasbih-beads .t-bead').forEach((b, i) => {
       b.classList.toggle('on', i < lit);
       b.classList.remove('pop');
@@ -821,41 +814,25 @@
     }
   }
 
-  let flashTimer = null;
-
   function tasbihTap() {
     const c = cur();
-    const t = tasbih;
-    // أي ضغطة أثناء وميض اكتمال الدورة تُنهي الوميض فورًا وتُحتسب
-    if (flashTimer) { clearTimeout(flashTimer); flashTimer = null; }
-    const before = litFor(c.count, t.target);
     c.count += 1;
-    t.total += 1;
-    let completed = false;
-    if (t.target && c.count >= t.target) {
-      completed = true;
-      c.rounds += 1;
-      c.count = 0; // التصفير فوري حتى لا تضيع أي ضغطة تالية
-    }
+    tasbih.total += 1;
     saveTasbih();
 
     const pulse = $('tasbih-count');
     pulse.classList.remove('bump'); void pulse.offsetWidth; pulse.classList.add('bump');
 
-    if (completed) {
+    const milestone = c.count % BEADS === 0;
+    renderTasbih(litFor(c.count) - 1);
+    if (milestone) {
+      // كل ٣٣: اهتزاز أقوى وتوهّج الحلقة، والعدّ يستمر
       if (navigator.vibrate) navigator.vibrate([30, 70, 30]);
-      // وميض عرض فقط: الحلقة كاملة والرقم المكتمل، ثم العودة للعدّ
-      renderTasbih();
-      document.querySelectorAll('#tasbih-beads .t-bead').forEach((b) => b.classList.add('on'));
-      $('tasbih-count').textContent = nf.format(t.target);
       const wrap = document.querySelector('.beads-wrap');
       wrap.classList.remove('complete'); void wrap.offsetWidth; wrap.classList.add('complete');
-      $('tasbih-live').textContent = 'اكتملت الدورة';
-      flashTimer = setTimeout(() => { flashTimer = null; renderTasbih(); }, 650);
-    } else {
-      if (navigator.vibrate) navigator.vibrate(7);
-      const after = litFor(c.count, t.target);
-      renderTasbih(after > before || !t.target ? after - 1 : undefined);
+      $('tasbih-live').textContent = nf.format(c.count);
+    } else if (navigator.vibrate) {
+      navigator.vibrate(7);
     }
   }
 
@@ -889,25 +866,10 @@
     renderTasbih();
   });
 
-  $('target-tabs').addEventListener('click', (e) => {
-    const b = e.target.closest('button[data-target]');
-    if (!b) return;
-    const t = ensureTasbih();
-    t.target = +b.dataset.target;
-    const c = cur();
-    if (t.target && c.count >= t.target) c.count = c.count % t.target;
-    saveTasbih();
-    renderTasbih();
-  });
-
   $('tasbih-undo').addEventListener('click', () => {
     const c = cur();
     if (c.count > 0) {
       c.count -= 1;
-      tasbih.total = Math.max(0, tasbih.total - 1);
-    } else if (c.rounds > 0 && tasbih.target) {
-      c.rounds -= 1;
-      c.count = tasbih.target - 1;
       tasbih.total = Math.max(0, tasbih.total - 1);
     }
     saveTasbih();
@@ -916,9 +878,8 @@
 
   $('tasbih-reset').addEventListener('click', () => {
     const c = cur();
-    if (!c.count && !c.rounds) return;
+    if (!c.count) return;
     c.count = 0;
-    c.rounds = 0;
     saveTasbih();
     renderTasbih();
     toast('تم تصفير العداد');
