@@ -1,11 +1,11 @@
 /* ============================================================
-   وِرد — منطق التطبيق
-   كل البيانات تُحفظ محليًا على الجهاز (localStorage).
+   Wird — app logic
+   All data is stored locally on the device (localStorage).
    ============================================================ */
 (function () {
   'use strict';
 
-  // ---------------------------------------------------------------- المدن
+  // ---------------------------------------------------------------- Cities
   const CITIES = [
     { id: 'cairo', name: 'القاهرة', lat: 30.0444, lng: 31.2357, tz: 'Africa/Cairo', method: 'Egyptian' },
     { id: 'alexandria', name: 'الإسكندرية', lat: 31.2001, lng: 29.9187, tz: 'Africa/Cairo', method: 'Egyptian' },
@@ -61,7 +61,7 @@
 
   const CHECK_SVG = '<svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>';
 
-  // ---------------------------------------------------------------- التخزين
+  // ---------------------------------------------------------------- Storage
   const store = {
     get(key, fallback) {
       try {
@@ -75,7 +75,7 @@
       try {
         localStorage.setItem('wird:' + key, JSON.stringify(value));
       } catch (e) {
-        /* التخزين غير متاح */
+        /* storage unavailable */
       }
     },
   };
@@ -107,7 +107,7 @@
   function saveLog() { store.set('log', log); }
   function saveProgress() { store.set('progress', progress); }
 
-  // ---------------------------------------------------------------- التنسيق
+  // ---------------------------------------------------------------- Formatting
   const nf = new Intl.NumberFormat('ar-EG');
   const nf2 = new Intl.NumberFormat('ar-EG', { minimumIntegerDigits: 2, useGrouping: false });
 
@@ -154,7 +154,7 @@
     return 'يوم';
   }
 
-  // ---------------------------------------------------------------- المواقيت
+  // ---------------------------------------------------------------- Prayer times
   const timesCache = new Map();
 
   function timesForKey(key) {
@@ -195,7 +195,7 @@
     else if (now < t.isha) phase = 'dusk';
     else phase = 'night';
 
-    // آخر صلاة دخل وقتها (لأذكار بعد الصلاة)
+    // Most recent prayer whose time has started (for after-prayer adhkar)
     let current = null;
     for (const p of PRAYERS) {
       if (p.key === 'sunrise') continue;
@@ -206,7 +206,7 @@
     return { now, today, t, yesterday, tomorrow, next, phase, prayerSlot };
   }
 
-  // ---------------------------------------------------------------- السماء
+  // ---------------------------------------------------------------- Sky
   const SKY = {
     night:     { a: '#0B1026', b: '#171F4A', c: '#29356F', glow: 'rgba(96,116,210,.28)', stars: 1 },
     dawn:      { a: '#1E2457', b: '#5A4D8B', c: '#D78E8B', glow: 'rgba(255,172,132,.6)', stars: .35 },
@@ -249,7 +249,7 @@
     $('arc-done').setAttribute('d', `M ${ARC.cx + ARC.rx} ${ARC.cy} A ${ARC.rx} ${ARC.ry} 0 0 0 ${p.x.toFixed(2)} ${p.y.toFixed(2)}`);
     $('arc-done').style.opacity = isDay ? 1 : .45;
 
-    // علامات الصلوات على قوس النهار
+    // Prayer markers along the daytime arc
     const span = t.maghrib - t.sunrise;
     const marks = [
       { k: 'sunrise', f: 0, label: 'الشروق', below: true },
@@ -278,14 +278,14 @@
          </g>`;
   }
 
-  // ---------------------------------------------------------------- واجهة الصلاة
+  // ---------------------------------------------------------------- Prayer screen
   let lastListSig = '';
 
   function renderPrayer(s) {
     const { now, t, next } = s;
     paintSky(s.phase);
 
-    // التاريخ
+    // Dates
     $('place-name').textContent = settings.label;
     try {
       $('hijri-date').textContent = new Intl.DateTimeFormat('ar-SA-u-ca-islamic-umalqura-nu-arab', {
@@ -296,7 +296,7 @@
       weekday: 'long', day: 'numeric', month: 'long', timeZone: settings.tz,
     }).format(now);
 
-    // الصلاة القادمة أو وقت الفجر الحالي
+    // Next prayer, or the current Fajr window
     const isFriday = new Intl.DateTimeFormat('en-US', { weekday: 'short', timeZone: settings.tz }).format(now) === 'Fri';
     let label, name, prefix, target;
     if (s.phase === 'dawn') {
@@ -322,7 +322,7 @@
 
     drawArc(s);
 
-    // قائمة المواقيت — تُعاد عند تغيّر الحالة فقط
+    // Times list — re-rendered only when its state changes
     const passedSig = PRAYERS.map((p) => (now >= t[p.key] ? 1 : 0)).join('');
     const sig = s.today + passedSig + next.key + settings.hour12 + settings.method + settings.madhab + settings.lat + isFriday;
     if (sig !== lastListSig) {
@@ -372,7 +372,7 @@
     saveLog();
   }
 
-  // ---------------------------------------------------------------- الالتزام
+  // ---------------------------------------------------------------- Progress
   function streak() {
     let key = dayKey(new Date());
     if (!(log[key] && log[key].fajr)) key = shiftKey(key, -1);
@@ -398,7 +398,7 @@
     $('streak-num').textContent = nf.format(st);
     $('streak-unit').textContent = st === 0 ? 'ابدأ سلسلتك غدًا' : daysWord(st) + ' متتالية';
 
-    // السبحة: ٣٣ حبة
+    // Rosary: 33 beads, one per day
     const N = 33, cx = 150, cy = 150, R = 126, gap = 26;
     let beads = '';
     for (let i = 0; i < N; i++) {
@@ -417,14 +417,14 @@
       `<path class="tassel" d="M ${cx} ${by + 26} l -7 22 M ${cx} ${by + 26} l -2.5 24 M ${cx} ${by + 26} l 2.5 24 M ${cx} ${by + 26} l 7 22"/>` +
       beads;
 
-    // إحصاءات
+    // Stats
     const month = today.slice(0, 7);
     const keys = Object.keys(log);
     $('stat-fajr').textContent = nf.format(keys.filter((k) => k.startsWith(month) && log[k].fajr).length);
     $('stat-best').textContent = nf.format(bestStreak());
     $('stat-adhkar').textContent = nf.format(keys.filter((k) => log[k].morning && log[k].evening).length);
 
-    // آخر سبعة أيام
+    // Last seven days
     const days = [];
     for (let i = 6; i >= 0; i--) days.push(shiftKey(today, -i));
     const wdFmt = new Intl.DateTimeFormat('ar-EG', { weekday: 'long', timeZone: 'UTC' });
@@ -462,12 +462,12 @@
     tick(true);
   });
 
-  // ---------------------------------------------------------------- الأذكار
+  // ---------------------------------------------------------------- Adhkar
   let adhkarKind = null;
 
   function ensureProgress(s) {
     if (progress.date !== s.today) {
-      // يوم جديد: نُبقي على عدّاد المساء إن كنا قبل الفجر (ليلة الأمس)
+      // New day: reset all counters
       progress = { date: s.today, prayerSlot: s.prayerSlot, counts: { morning: {}, evening: {}, prayer: {} } };
       saveProgress();
     }
@@ -505,7 +505,7 @@
     updateAdhkarHeader();
   }
 
-  // عرض الآيات بخط المصحف، مع رقم الآية في آخرها
+  // Render verses in the mushaf font, with the verse number at the end
   function quranHTML(q) {
     let html = '<div class="dhikr-text quran">';
     if (q.preface) html += `<span class="preface">${q.preface}</span>`;
@@ -514,7 +514,7 @@
       if (p.basmala) html += `<span class="basmala">${window.QURAN.basmala}</span>`;
       const num = (n) => `<span class="ayah-num" aria-label="الآية ${nf.format(n)}">\uFD3F${nf.format(n)}\uFD3E</span>`;
       if (p.surah.ayat.length > 1) {
-        // السور القصيرة: كل آية في سطر مستقل كما في المصحف
+        // Short surahs: one verse per line, as in the mushaf
         html += '<span class="ayat lines">' + p.surah.ayat
           .map(([n, t]) => `<span class="ayah-line">${t}${num(n)}</span>`)
           .join(' ') + '</span>';
@@ -525,10 +525,10 @@
     return html + '</div>';
   }
 
-  // تصغير خط السورة بالقدر اللازم فقط حتى تتسع كل آية لسطر واحد
+  // Shrink a surah's font only as much as needed so every verse fits on one line
   const QURAN_MIN_SIZE = 17;
   function fitQuran(root) {
-    // القياس يجب أن يتم بخط المصحف نفسه، فننتظر تحميله إن لم يكن جاهزًا
+    // Measurement must use the mushaf font itself, so wait for it to load if needed
     if (document.fonts && !document.fonts.check('23px "Amiri Quran"', 'بِسۡمِ')) {
       document.fonts.load('23px "Amiri Quran"', 'بِسۡمِ').then(() => fitQuran(root)).catch(() => {});
     }
@@ -611,7 +611,7 @@
     const finished = n + 1 >= d.count;
     if (navigator.vibrate) navigator.vibrate(finished ? [12, 40, 12] : 8);
 
-    // تحديث البطاقة الحالية فقط
+    // Update only the tapped card
     const li = card.parentElement;
     li.innerHTML = cardHTML(d, n + 1, !finished);
     fitQuran(li);
@@ -628,7 +628,7 @@
       }
     }
 
-    // تسجيل اكتمال الأذكار
+    // Record completion of the set
     const allDone = set.items.every((x) => (counts[x.id] || 0) >= x.count);
     if (allDone && (adhkarKind === 'morning' || adhkarKind === 'evening')) {
       setDay(progress.date, adhkarKind, true);
@@ -652,8 +652,8 @@
     window.scrollTo({ top: 0, behavior: 'smooth' });
   });
 
-  // ---------------------------------------------------------------- الموقع
-  // الإعدادات الافتراضية: طريقة الحساب حسب المدينة، والعصر على الجمهور، وصيغة ١٢ ساعة
+  // ---------------------------------------------------------------- Location
+  // Defaults: calculation method follows the city, standard (Shafi) Asr, 12-hour clock
   function renderLocation() {
     const sel = $('city-select');
     if (!sel.options.length) {
@@ -729,7 +729,7 @@
     );
   });
 
-  // ---------------------------------------------------------------- السبحة
+  // ---------------------------------------------------------------- Tasbih
   const PHRASES = [
     { id: 'subhan', label: 'سبحان الله', text: 'سُبْحَانَ اللَّهِ' },
     { id: 'hamd', label: 'الحمد لله', text: 'الْحَمْدُ لِلَّهِ' },
@@ -764,7 +764,7 @@
   }
   function saveTasbih() { store.set('tasbih', tasbih); }
 
-  // العدّ مفتوح بلا حد، والحبّات تكمل دورتها كل ٣٣
+  // Counting is open-ended; the beads complete a cycle every 33
   function litFor(count) {
     if (count <= 0) return 0;
     return ((count - 1) % BEADS) + 1;
@@ -776,7 +776,7 @@
     const cx = 150, cy = 150, R = 128, gap = 22;
     let html = `<circle class="t-string" cx="${cx}" cy="${cy}" r="${R}"/>`;
     for (let i = 0; i < BEADS; i++) {
-      // الحبّة الأولى أسفل يمين الشرّابة، والعدّ عكس عقارب الساعة كما تُمرَّر السبحة
+      // First bead sits just right of the tassel; beads advance counter-clockwise, as a rosary is passed
       const ang = ((90 - gap / 2 - (i * (360 - gap)) / (BEADS - 1)) * Math.PI) / 180;
       const x = cx + R * Math.cos(ang), y = cy + R * Math.sin(ang);
       html += `<circle class="t-bead" data-i="${i}" cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="7.6"/>`;
@@ -826,7 +826,7 @@
     const milestone = c.count % BEADS === 0;
     renderTasbih(litFor(c.count) - 1);
     if (milestone) {
-      // كل ٣٣: اهتزاز أقوى وتوهّج الحلقة، والعدّ يستمر
+      // Every 33: stronger vibration and a ring glow; counting continues
       if (navigator.vibrate) navigator.vibrate([30, 70, 30]);
       const wrap = document.querySelector('.beads-wrap');
       wrap.classList.remove('complete'); void wrap.offsetWidth; wrap.classList.add('complete');
@@ -836,8 +836,8 @@
     }
   }
 
-  // الضغط في أي مكان من الشاشة يُحتسب، عدا الأزرار وشريط التنقل
-  // كل لمسة تُحتسب، حتى عند التسبيح بإصبعين بالتناوب السريع
+  // A tap anywhere on the screen counts, except on buttons and the tab bar
+  // Every touch counts, even when alternating two fingers quickly
   const isControl = (el) => el.closest('button, select, a, .phrase-chips, .tasbih-controls');
   $('view-tasbih').addEventListener('pointerdown', (e) => {
     if (e.pointerType === 'mouse' && e.button > 0) return;
@@ -845,7 +845,7 @@
     e.preventDefault();
     tasbihTap();
   });
-  // منع التكبير والنقرة المتأخرة على شاشة السبحة (يلزم مستمع غير سلبي لـ iOS)
+  // Block zoom and delayed clicks on the tasbih screen (iOS needs a non-passive listener)
   const blockTouch = (e) => { if (!isControl(e.target)) e.preventDefault(); };
   $('view-tasbih').addEventListener('touchstart', blockTouch, { passive: false });
   $('view-tasbih').addEventListener('touchend', blockTouch, { passive: false });
@@ -886,7 +886,7 @@
     tick(true);
   });
 
-  // ---------------------------------------------------------------- التنقل
+  // ---------------------------------------------------------------- Navigation
   function showView(name) {
     document.querySelectorAll('.view').forEach((v) => v.classList.toggle('is-active', v.id === 'view-' + name));
     document.querySelectorAll('.tabbar button').forEach((b) => b.setAttribute('aria-selected', b.dataset.view === name ? 'true' : 'false'));
@@ -902,7 +902,7 @@
     if (b) showView(b.dataset.view);
   });
 
-  // ---------------------------------------------------------------- تنبيه مؤقت
+  // ---------------------------------------------------------------- Toast
   let toastTimer;
   function toast(msg) {
     const el = $('toast');
@@ -912,7 +912,7 @@
     toastTimer = setTimeout(() => el.classList.remove('show'), 2200);
   }
 
-  // ---------------------------------------------------------------- منع التكبير
+  // ---------------------------------------------------------------- Disable zoom
   ['gesturestart', 'gesturechange', 'gestureend'].forEach((t) =>
     document.addEventListener(t, (e) => e.preventDefault(), { passive: false })
   );
@@ -920,7 +920,7 @@
     if (e.touches && e.touches.length > 1) e.preventDefault();
   }, { passive: false });
 
-  // ---------------------------------------------------------------- الدورة
+  // ---------------------------------------------------------------- Main loop
   function tick(force) {
     const view = document.querySelector('.view.is-active');
     if (!force && document.hidden) return;
@@ -932,7 +932,7 @@
 
   tick(true);
 
-  // عامل الخدمة: التحقق من التحديثات عند كل فتح، وإعادة التحميل مرة واحدة عند وصول نسخة جديدة
+  // Service worker: check for updates on every open, and reload once when a new version takes over
   if ('serviceWorker' in navigator) {
     const hadController = !!navigator.serviceWorker.controller;
     let reloaded = false;

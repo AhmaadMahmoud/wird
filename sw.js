@@ -1,13 +1,13 @@
-/* عامل الخدمة: يحفظ ملفات التطبيق ليعمل دون اتصال بالإنترنت.
+/* Service worker: caches the app's files so it works offline.
  *
- * الاستراتيجية:
- * - صفحات التطبيق وملفات الكود (HTML/CSS/JS): من الشبكة أولًا مع التحقق من الخادم،
- *   ثم من الذاكرة عند انقطاع الاتصال. هكذا تصل التعديلات فور نشرها.
- * - الخطوط والأيقونات: من الذاكرة أولًا لأنها لا تتغير.
+ * Strategy:
+ * - Pages and code (HTML/CSS/JS): network first, revalidated with the server,
+ *   falling back to the cache when offline. Updates reach users as soon as they're published.
+ * - Fonts and icons: cache first, since they don't change.
  *
- * عند إضافة ملف جديد إلى التطبيق، أضفه إلى SHELL وغيّر رقم الإصدار.
+ * When adding a new file to the app, add it to SHELL and bump VERSION.
  */
-const VERSION = 'wird-v10';
+const VERSION = 'wird-v11';
 
 const SHELL = [
   './',
@@ -34,7 +34,7 @@ const SHELL = [
 const NETWORK_TIMEOUT = 3500;
 
 self.addEventListener('install', (event) => {
-  // cache: 'reload' يتجاوز ذاكرة المتصفح المؤقتة فنحفظ أحدث نسخة من الخادم فعلًا
+  // cache: 'reload' bypasses the browser's HTTP cache so we store the server's latest copy
   event.waitUntil(
     caches.open(VERSION)
       .then((c) => c.addAll(SHELL.map((u) => new Request(u, { cache: 'reload' }))))

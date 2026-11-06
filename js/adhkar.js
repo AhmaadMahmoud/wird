@@ -1,9 +1,9 @@
 /*
- * نصوص الأذكار — مأخوذة من «حصن المسلم».
- * كل ذكر: { id, text, count, note? , only?: 'morning' | 'evening', evening?: نص المساء إن اختلف }
+ * Adhkar texts — from "Hisn al-Muslim" (Fortress of the Muslim).
+ * Each entry: { id, text | quran, count, note?, only?: 'morning' | 'evening', evening?: evening wording when it differs }
  */
 (function () {
-  // الآيات تُؤخذ من js/quran.js (نص المصحف العثماني بتشكيله الكامل)
+  // Quran verses come from js/quran.js (full Uthmani mushaf text with diacritics)
   const Q = window.QURAN;
   const ISTIADHA = 'أَعُوذُ بِاللَّهِ مِنَ الشَّيْطَانِ الرَّجِيمِ';
   const KURSI = { preface: ISTIADHA, passages: [{ surah: Q.kursi, basmala: false }] };
@@ -18,7 +18,7 @@
     ],
   };
 
-  // أذكار الصباح والمساء (المشترك بينهما مع اختلاف الصيغة حيث يلزم)
+  // Morning and evening adhkar (shared list, with wording that differs where needed)
   const morningEvening = [
     { id: 'kursi', quran: KURSI, count: 1, note: 'آية الكرسي' },
     { id: 'ikhlas', quran: IKHLAS, count: 3, note: 'سورة الإخلاص' },

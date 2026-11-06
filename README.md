@@ -1,69 +1,71 @@
-# وِرد
+# Wird (وِرد)
 
-تطبيق ويب خفيف يعمل على الموبايل كأنه تطبيق مثبّت (PWA)، يساعدك على المحافظة على صلاة الفجر والأذكار.
+A lightweight web app that installs on your phone like a native app (PWA) and helps you keep up with Fajr prayer and your daily adhkar. The interface is in Arabic.
 
-- **مواقيت الصلاة** لمدينتك أو لموقعك الحالي (بالضغط على اسم المدينة)، وتُضبط طريقة الحساب تلقائيًا حسب المدينة، مع عدّ تنازلي للصلاة القادمة، وسماء يتغير لونها مع أوقات اليوم.
-- **الأذكار**: أذكار الصباح، وأذكار المساء، وأذكار بعد الصلاة، مع عدّاد لكل ذكر.
-- **السبحة**: عدّاد يُحتسب بالضغط في أي مكان من الشاشة، مع اختيار الذكر، والعدّ مفتوح بلا حد مع تنبيه كل ٣٣.
-- **التزامي**: سلسلة الأيام المتتالية التي صليت فيها الفجر، معروضة كحبّات سبحة لآخر ٣٣ يومًا، وجدول لآخر أسبوع.
-- يعمل **دون إنترنت** بعد أول فتح.
-- **لا خوادم ولا حسابات**: كل البيانات محفوظة على جهاز المستخدم فقط.
+**Live app:** https://ahmaadmahmoud.github.io/wird/
 
-## النشر على GitHub Pages
+- **Prayer times** for your city or current location (tap the city name to change it). The calculation method is picked automatically from the city. There's a countdown to the next prayer, and the sky changes color with the time of day.
+- **Adhkar:** morning, evening, and after-prayer remembrances, each with its own counter. Quran verses are shown in the full Uthmani script of the mushaf.
+- **Tasbih:** a counter where a tap anywhere on the screen counts. Pick the dhikr; counting is open-ended, with a stronger vibration every 33.
+- **Progress:** your streak of consecutive days praying Fajr, shown as rosary beads for the last 33 days, plus a grid for the last week.
+- Works **offline** after the first visit.
+- **No servers, no accounts:** all data stays on the user's device.
 
-1. أنشئ مستودعًا جديدًا على GitHub (مثلًا باسم `wird`) وارفع إليه محتويات هذا المجلد كما هي.
-2. من **Settings** ثم **Pages**، اختر **Deploy from a branch**، ثم الفرع `main` والمجلد `/ (root)`، واضغط **Save**.
-3. بعد دقيقة تقريبًا يصبح التطبيق متاحًا على:
-   `https://<اسم-المستخدم>.github.io/wird/`
+## Install on your phone
 
-كل المسارات في المشروع نسبية، لذلك يعمل التطبيق من أي اسم مستودع دون تعديل.
+- **iPhone:** open the link in Safari or Chrome, tap Share, then **Add to Home Screen**.
+- **Android:** open the link in Chrome, tap the ⋮ menu, then **Install app** (or **Add to Home screen**).
 
-## التثبيت على الموبايل
+## Deploy to GitHub Pages
 
-- **iPhone**: افتح الرابط في Safari، ثم زر المشاركة، ثم **إضافة إلى الشاشة الرئيسية**.
-- **Android**: افتح الرابط في Chrome، ثم القائمة، ثم **تثبيت التطبيق**.
+1. Create a new GitHub repository (for example `wird`) and push the contents of this folder as-is.
+2. Go to **Settings → Pages**, choose **Deploy from a branch**, select the `main` branch and the `/ (root)` folder, then click **Save**.
+3. After about a minute the app is live at:
+   `https://<your-username>.github.io/wird/`
 
-## التشغيل محليًا
+All paths in the project are relative, so it works under any repository name without changes.
 
-عامل الخدمة (Service Worker) يحتاج خادمًا محليًا، ولا يعمل بفتح الملف مباشرة:
+## Run locally
+
+The service worker needs a local server; opening the file directly won't work:
 
 ```bash
 cd wird
 python3 -m http.server 8080
-# ثم افتح http://localhost:8080
+# then open http://localhost:8080
 ```
 
-## تحديث التطبيق بعد النشر
+## Shipping updates
 
-التعديلات تصل للمستخدمين تلقائيًا عند فتح التطبيق، لأن ملفات الكود تُطلب من الخادم أولًا ولا تُستخدم النسخة المحفوظة إلا عند انقطاع الاتصال.
+Updates reach users automatically the next time they open the app: code files are fetched from the server first, and the cached copy is only used when offline.
 
-عند إضافة ملف جديد إلى التطبيق، أضفه إلى قائمة `SHELL` في `sw.js` وغيّر رقم الإصدار:
+When you add a new file to the app, add it to the `SHELL` list in `sw.js` and bump the version:
 
 ```js
-const VERSION = 'wird-v4';
+const VERSION = 'wird-v11';
 ```
 
-## بنية المشروع
+## Project structure
 
 ```
-index.html            الصفحة الرئيسية
-css/style.css         الأنماط
-css/fonts.css         تعريف الخطوط
-fonts/                ملفات الخطوط
-js/app.js             منطق التطبيق
-js/adhkar.js          نصوص الأذكار
-js/quran.js           نصوص الآيات القرآنية بالرسم العثماني
-js/adhan.min.js       مكتبة حساب المواقيت
-manifest.webmanifest  بيانات تثبيت التطبيق
-sw.js                 عامل الخدمة للعمل دون اتصال
-icons/                الأيقونات
+index.html            Main page
+css/style.css         Styles
+css/fonts.css         Font definitions
+fonts/                Font files
+js/app.js             App logic
+js/adhkar.js          Adhkar texts
+js/quran.js           Quran verses in Uthmani script (generated, do not edit)
+js/adhan.min.js       Prayer-time calculation library
+manifest.webmanifest  Install metadata
+sw.js                 Service worker for offline use
+icons/                App icons
 ```
 
-## المصادر
+## Sources
 
-- حساب المواقيت: مكتبة [adhan-js](https://github.com/batoulapps/adhan-js) (رخصة MIT، الملف `js/adhan.LICENSE`).
-- نصوص الآيات: النص العثماني برواية حفص من «موسوعة القرآن الكريم» (quranenc.com)، مولّدة آليًا في `js/quran.js` دون تعديل يدوي، وتُعرض بخط Amiri Quran.
-- نصوص الأذكار: كتاب «حصن المسلم».
-- الخطوط: Amiri وAmiri Quran وReadex Pro، مضمّنة في المجلد `fonts` (رخصة SIL OFL).
+- Prayer times: [adhan-js](https://github.com/batoulapps/adhan-js) (MIT license, see `js/adhan.LICENSE`).
+- Quran verses: Uthmani text, Hafs narration, from The Noble Quran Encyclopedia (quranenc.com). It's generated automatically into `js/quran.js` with no manual edits, and displayed in the Amiri Quran font.
+- Adhkar texts: *Hisn al-Muslim* (Fortress of the Muslim).
+- Fonts: Amiri, Amiri Quran, and Readex Pro, bundled in the `fonts` folder (SIL Open Font License).
 
-إن وجدت خطأ في نص ذكر أو في المواقيت، افتح Issue أو أرسل Pull Request.
+Found a mistake in a dhikr's text or in the prayer times? Open an issue or send a pull request.

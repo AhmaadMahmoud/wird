@@ -1,10 +1,10 @@
 /*
- * نصوص الآيات القرآنية — مولّدة آليًا من المصدر دون أي تعديل يدوي.
- * المصدر: النص العثماني برواية حفص — موسوعة القرآن الكريم (quranenc.com) عبر حزمة quran-json 3.1.2
- * لا تُعدَّل هذه النصوص يدويًا.
+ * Quran verses — generated automatically from the source, with no manual edits.
+ * Source: Uthmani text, Hafs narration — The Noble Quran Encyclopedia (quranenc.com), via quran-json 3.1.2
+ * Do not edit these texts by hand.
  */
 window.QURAN = {
-  "source": "النص العثماني برواية حفص — موسوعة القرآن الكريم (quranenc.com) عبر حزمة quran-json 3.1.2",
+  "source": "Uthmani text, Hafs narration — The Noble Quran Encyclopedia (quranenc.com), via quran-json 3.1.2",
   "basmala": "بِسۡمِ ٱللَّهِ ٱلرَّحۡمَٰنِ ٱلرَّحِيمِ",
   "kursi": {
     "name": "البقرة",
